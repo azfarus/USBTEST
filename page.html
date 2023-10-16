@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>USB CDC Communication</title>
+</head>
+<body>
+    <button id="connectButton">Connect to USB CDC Device</button>
+    <div id="output"></div>
+
+    <script>
+        document.getElementById('connectButton').addEventListener('click', async () => {
+            try {
+                const port = await navigator.serial.requestPort();
+                await port.open({ baudRate: 115200 });
+
+                // Function to read data from the serial port
+                async function readData() {
+                    const reader = port.readable.getReader();
+                    while (true) {
+                        const { value, done } = await reader.read();
+                        if (done) {
+                            reader.releaseLock();
+                            break;
+                        }
+                        // Display received data
+                        document.getElementById('output').textContent += new TextDecoder().decode(value);
+                    }
+                }
+
+                // Function to write data to the serial port
+                async function writeData(data) {
+                    const writer = port.writable.getWriter();
+                    await writer.write(new TextEncoder().encode(data));
+                    writer.releaseLock();
+                }
+
+                // Read and display data from the device
+                readData();
+
+                // Example: Write data to the device
+                writeData('Hello, USB CDC Device!\n');
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
